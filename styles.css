@@ -1,0 +1,157 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500&display=swap");
+
+/* @abstracts */
+:root {
+  --color-bg-light: #99d3ff;
+  --color-bg-dark: #407899;
+  --color-primary: #221d23;
+  --color-secondary: #f4f1de;
+  --color-tertiary: #dc8c00;
+  --color-primary-lighter: #362e38;
+  --color-tertiary-darker: #a36700;
+  --border-gray: 1px solid #454545;
+}
+
+/* @base */
+html {
+  font-size: 62.5%;
+  font-family: sans-serif, serif, monospace, cursive, fantasy;
+}
+
+*:where(:not(iframe, canvas, img, svg, video):not(svg *)) {
+  all: unset;
+  display: revert;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: linear-gradient(
+    113deg,
+    var(--color-bg-light) 0%,
+    var(--color-bg-dark) 90%
+  );
+  font-family: "Ubuntu", sans-serif;
+  font-size: 1.6rem;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+/* @component */
+.line-right {
+  border-right: var(--border-gray);
+}
+
+.line-bottom {
+  border-bottom: var(--border-gray);
+}
+
+/* @main */
+#main {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+}
+
+/* @section: main-calculator  */
+#main .main-calculator {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  outline: var(--border-gray);
+}
+
+#main .main-calculator .calc-output {
+  height: 12rem;
+  padding: 2rem 1.5rem;
+
+  background-color: var(--color-primary);
+  text-align: right;
+}
+
+#main .main-calculator .calc-output > *:not(:last-child) {
+  margin-bottom: 2rem;
+}
+
+#main .main-calculator .calc-output .output-expression {
+  font-size: 1.4rem;
+}
+
+#main .main-calculator .calc-output .output-result {
+  font-size: 3.5rem;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+#main .main-calculator .calc-buttons {
+  text-align: center;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  font-size: 2.5rem;
+}
+
+#main .main-calculator .calc-buttons > * {
+  padding: 2rem;
+  transition: all 0.9ms ease-in-out;
+}
+
+#main .main-calculator .calc-buttons .btn-clear {
+  grid-column: 1 / 4;
+}
+
+#main .main-calculator .calc-buttons .btn-point {
+  grid-column: 3 / 4;
+  grid-row: 5 / -1;
+}
+
+#main .main-calculator .calc-buttons .num-0 {
+  grid-column: 1 / 3;
+  grid-row: 5 /-1;
+}
+
+#main .main-calculator .calc-buttons .num-1,
+#main .main-calculator .calc-buttons .num-2,
+#main .main-calculator .calc-buttons .num-3 {
+  grid-row: 4 / 5;
+}
+
+#main .main-calculator .calc-buttons .num-4,
+#main .main-calculator .calc-buttons .num-5,
+#main .main-calculator .calc-buttons .num-6 {
+  grid-row: 3 / 4;
+}
+
+#main .main-calculator .calc-buttons .num-7,
+#main .main-calculator .calc-buttons .num-8,
+#main .main-calculator .calc-buttons .num-9 {
+  grid-row: 2 / 3;
+}
+
+#main .main-calculator .calc-buttons .btn-operators,
+#main .main-calculator .calc-buttons .btn-equal {
+  grid-column: 4 / -1;
+  background-color: var(--color-tertiary);
+}
+
+#main .main-calculator .calc-buttons .btn-clear:hover,
+#main .main-calculator .calc-buttons .btn-point:hover,
+#main .main-calculator .calc-buttons .btn-num:hover {
+  background-color: var(--color-primary-lighter);
+}
+
+#main .main-calculator .calc-buttons .btn-operators:hover,
+#main .main-calculator .calc-buttons .btn-equal:hover {
+  background-color: var(--color-tertiary-darker);
+}
