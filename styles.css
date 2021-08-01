@@ -84,11 +84,11 @@ a {
   margin-bottom: 2rem;
 }
 
-#main .main-calculator .calc-output .output-expression {
+#main .main-calculator .calc-output .output-small {
   font-size: 1.4rem;
 }
 
-#main .main-calculator .calc-output .output-result {
+#main .main-calculator .calc-output .output-big {
   font-size: 3.5rem;
   word-wrap: break-word;
   word-break: break-all;
