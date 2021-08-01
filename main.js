@@ -1,67 +1,94 @@
-const expression_p = document.querySelector(".output-expression");
-const result_p = document.querySelector(".output-result");
+const output_small_p = document.querySelector(".output-small");
+const output_big_p = document.querySelector(".output-big");
 const clear_button = document.querySelector(".btn-clear");
 const MATH_OPERATORS = ["+", "-", "x", "÷"];
+let isResultError = false;
+let isResultHasAnswer = false;
 
-const alterToClearEntityButton = () => {
-  if (result_p.innerText) clear_button.innerText = "CE";
+const setClearButtonToDefault = () => {
+  clear_button.innerText = "AC";
 };
 
-const alterToClearGlobalButton = () => {
-  if (result_p.innerText === "") clear_button.innerText = "C";
+const alterClearButtonLabel = () => {
+  const alterToACLabel = () => {
+    if (output_big_p.innerText === "") clear_button.innerText = "AC";
+  };
+
+  const alterToCELabel = () => {
+    if (output_big_p.innerText) clear_button.innerText = "CE";
+  };
+
+  alterToACLabel();
+  alterToCELabel();
 };
 
-const setToClearGlobalButton = () => {
-  clear_button.innerText = "C";
+const clearAllCharacters = () => {
+  output_small_p.innerText = "";
+  output_big_p.innerText = "";
 };
 
-const clearGlobal = () => {
-  expression_p.innerText = "";
-  result_p.innerText = "";
-  alterToClearGlobalButton();
+const clearLastCharacter = () => {
+  let clearLastCharacterCleared = output_big_p.innerText.slice(0, -1);
+  output_big_p.innerText = clearLastCharacterCleared;
 };
 
-const clearEntity = () => {
-  let resultLastCharRemoved = result_p.innerText.slice(0, -1);
-  result_p.innerText = resultLastCharRemoved;
-  alterToClearGlobalButton();
+const clearOutputCharacters = () => {
+  if (clear_button.innerText === "CE") clearLastCharacter();
+  if (clear_button.innerText === "AC") clearAllCharacters();
+  alterClearButtonLabel();
 };
 
-const displayCharSelected = (char) => {
-  return (result_p.innerText += char);
+const displayCharacter = (char) => {
+  const resetErrorOutput = () => {
+    if (!isResultError) return;
+    output_small_p.innerText = "";
+    output_big_p.innerText = "";
+    isResultError = false;
+  };
+
+  const resetAnswerOutput = (char) => {
+    if (!isResultHasAnswer) return;
+    if (isNaN(char)) {
+      output_small_p.innerText = `Ans: ${output_big_p.innerText}`;
+      isResultHasAnswer = false;
+    }
+
+    if (!isNaN(char)) {
+      clearAllCharacters();
+      isResultHasAnswer = false;
+    }
+  };
+
+  resetAnswerOutput(char);
+  resetErrorOutput();
+  output_big_p.innerText += char;
+  alterClearButtonLabel();
 };
 
-const getCurrentUseOperator = (expression) => {
+const getOperator = (expression) => {
   return expression
     .split("")
     .filter((operator) => MATH_OPERATORS.includes(operator))
     .join("");
 };
 
-const getCurrentNumbers = (expression, operator) => {
+const getNumbers = (expression, operator) => {
   const convertStringToNumber = (string) => {
-    let numbers;
-    const convertToNumberWithDecimal = () => {
-      if (string.includes(".")) numbers = parseFloat(string);
-    };
-
-    const convertToWholeNumber = () => {
-      if (!string.includes(".")) numbers = parseInt(string);
-    };
-
-    convertToNumberWithDecimal();
-    convertToWholeNumber();
-    return numbers;
+    if (string.includes(".")) return parseFloat(string);
+    return parseInt(string);
   };
 
   return expression
     .split(operator)
-    .map((number) => convertStringToNumber(number));
+    .map((numbers) => convertStringToNumber(numbers));
 };
 
-const calculateNumbers = (numbers, operator) => {
-  const unableToCalculate = () => {
+const calculateEquation = (operator, numbers) => {
+  const calculateWithMissingNumber = () => {
     return "Syntax Error";
+  };
+  const calculateWithMissingOperator = () => {
+    return numbers.join("");
   };
 
   const addNumbers = () => {
@@ -76,9 +103,9 @@ const calculateNumbers = (numbers, operator) => {
     return numbers.reduce((result, number) => result * number);
   };
 
-  const divideNumber = () => {
+  const divideNumbers = () => {
     return numbers.reduce((result, number) => {
-      if (result === 0 && number === 0) return "Error";
+      if (result === 0 && number === 0) return "Syntax Error";
       if (result === 0) return 0;
       if (number === 0) return "Infinity";
 
@@ -86,143 +113,160 @@ const calculateNumbers = (numbers, operator) => {
     });
   };
 
-  if (numbers.includes(NaN)) return unableToCalculate();
+  if (numbers.includes(NaN)) return calculateWithMissingNumber();
+  if (operator === "") return calculateWithMissingOperator();
   if (operator === "+") return addNumbers();
   if (operator === "-") return subtractNumbers();
   if (operator === "x") return multiplyNumbers();
-  if (operator === "÷") return divideNumber();
+  if (operator === "÷") return divideNumbers();
 };
 
-const displayResult = (expression, operator, answer) => {
-  const addSpaceInExpression = () => {
-    expression_p.innerText = expression.split(operator).join(` ${operator} `);
+const displayResult = ({ expression, operator, result }) => {
+  const checksResult = () => {
+    if (result === "Syntax Error") isResultError = true;
+    if (result !== "Syntax Error") isResultHasAnswer = true;
+  };
+
+  const displayExrpression = () => {
+    if (result === "Syntax Error") return;
+
+    const displayWithOperator = () => {
+      if (operator)
+        output_small_p.innerText = expression
+          .split(operator)
+          .join(` ${operator} `);
+    };
+
+    const displayWithoutOperator = () => {
+      if (operator === "") output_small_p.innerText = result;
+    };
+
+    displayWithOperator();
+    displayWithoutOperator();
   };
 
   const displayAnswer = () => {
-    result_p.innerText = answer;
+    output_big_p.innerText = result;
   };
 
-  addSpaceInExpression();
+  checksResult();
+  displayExrpression();
   displayAnswer();
 };
 
-const initiateButtonActions = () => {
-  const number_buttons = document.querySelectorAll(".btn-num");
-  const point_button = document.querySelector(".btn-point");
-  const operator_buttons = document.querySelectorAll(".btn-operators");
-  const equal_button = document.querySelector(".btn-equal");
+window.addEventListener("keydown", initiateKeydownActions);
 
-  clear_button.addEventListener("click", initiateClearButtonAction);
-  point_button.addEventListener("click", displayPointButtonClicked);
-  number_buttons.forEach((number) => {
-    number.addEventListener("click", initiateNumberButtonAction);
+function initiateKeydownActions(e) {
+  const initiateBackspaceAction = () => {
+    if (e.keyCode === 8) clearOutputCharacters();
+  };
+
+  const initiateDeleteAction = () => {
+    if (e.keyCode === 46) clearGlobal();
+  };
+
+  const initiateEnterAction = () => {
+    if (e.keyCode === 13) {
+      setClearButtonToDefault();
+      const expression = output_big_p.innerText;
+      const operator = getOperator(expression);
+      const numbers = getNumbers(expression, operator);
+      const result = calculateEquation(operator, numbers);
+      displayResult({
+        expression,
+        operator,
+        result,
+      });
+    }
+  };
+
+  const initiateEqualAction = () => {
+    if (e.keyCode === 187 && !e.shiftKey) {
+      setClearButtonToDefault();
+      const expression = output_big_p.innerText;
+      const operator = getOperator(expression);
+      const numbers = getNumbers(expression, operator);
+      const result = calculateEquation(operator, numbers);
+      displayResult({
+        expression,
+        operator,
+        result,
+      });
+    }
+  };
+
+  const initiatePointAction = () => {
+    if (e.key === ".") displayCharacter(e.key);
+  };
+
+  const initiateNumberAction = () => {
+    if (!isNaN(e.key)) displayCharacter(e.key);
+  };
+
+  const initiatePlusAction = () => {
+    if (e.key === "+") displayCharacter(e.key);
+  };
+
+  const initiateMinusAction = () => {
+    if (e.key === "-") displayCharacter(e.key);
+  };
+
+  const initiateTimesAction = () => {
+    if (e.key === "X" || e.key === "x" || e.key === "*") displayCharacter("x");
+  };
+
+  const initiateSlashAction = () => {
+    if (e.key === "/") displayCharacter("÷");
+  };
+
+  initiatePointAction();
+  initiateNumberAction();
+  initiatePlusAction();
+  initiateMinusAction();
+  initiateTimesAction();
+  initiateSlashAction();
+  initiateBackspaceAction();
+  initiateDeleteAction();
+  initiateEnterAction();
+  initiateEqualAction();
+}
+
+const point_button = document.querySelector(".btn-point");
+const number_buttons = document.querySelectorAll(".btn-num");
+const operator_buttons = document.querySelectorAll(".btn-operators");
+const equal_button = document.querySelector(".btn-equal");
+
+clear_button.addEventListener("click", clearOutputCharacters);
+point_button.addEventListener("click", initiatePointButtonClicked);
+number_buttons.forEach((number) => {
+  number.addEventListener("click", initiateNumberButtonClicked);
+});
+operator_buttons.forEach((operator) =>
+  operator.addEventListener("click", initiateOperatorButtonClicked)
+);
+equal_button.addEventListener("click", initiateEqualButtonAction);
+
+function initiatePointButtonClicked() {
+  displayCharacter(point_button.innerText);
+}
+
+function initiateNumberButtonClicked() {
+  displayCharacter(this.innerText);
+}
+
+function initiateOperatorButtonClicked() {
+  displayCharacter(this.innerText);
+}
+
+function initiateEqualButtonAction() {
+  setClearButtonToDefault();
+  const expression = output_big_p.innerText;
+  const operator = getOperator(expression);
+  const numbers = getNumbers(expression, operator);
+  const result = calculateEquation(operator, numbers);
+  displayResult({
+    expression,
+    operator,
+    result,
   });
-  operator_buttons.forEach((operator) =>
-    operator.addEventListener("click", initiateOperatorButtonAction)
-  );
-  equal_button.addEventListener("click", initiateEqualButtonAction);
-
-  function initiateClearButtonAction() {
-    if (clear_button.innerText === "C") clearGlobal();
-    if (clear_button.innerText === "CE") clearEntity();
-  }
-
-  function displayPointButtonClicked() {
-    displayCharSelected(point_button.innerText);
-    alterToClearEntityButton();
-  }
-
-  function initiateNumberButtonAction() {
-    displayCharSelected(this.innerText);
-    alterToClearEntityButton();
-  }
-
-  function initiateOperatorButtonAction() {
-    displayCharSelected(this.innerText);
-    alterToClearEntityButton();
-  }
-
-  function initiateEqualButtonAction() {
-    const expression = result_p.innerText;
-    const operator = getCurrentUseOperator(expression);
-    const numbers = getCurrentNumbers(expression, operator);
-    const answer = calculateNumbers(numbers, operator);
-
-    displayResult(expression, operator, answer);
-    setToClearGlobalButton();
-  }
-};
-
-const initiateKeyboardActions = () => {
-  window.addEventListener("keydown", initiateKeydownActions);
-  window.addEventListener("keypress", initiateKeypressActions);
-
-  function initiateKeydownActions(e) {
-    const initiateBackspaceAction = (keyCode) => {
-      if (keyCode === 8) clear_button === "C" ? clearGlobal() : clearEntity();
-    };
-
-    const initiateDeleteAction = (keyCode) => {
-      if (keyCode === 46) clearGlobal();
-    };
-
-    const initiateEnterAction = (keyCode) => {
-      if (keyCode == 13) console.log("Poggers");
-    };
-
-    const initiateEqualAction = (e) => {
-      if (e.keyCode === 187 && !e.shiftKey) console.log("Poggers");
-    };
-
-    initiateBackspaceAction(e.keyCode);
-    initiateDeleteAction(e.keyCode);
-    initiateEnterAction(e.keyCode);
-    initiateEqualAction(e);
-  }
-
-  function initiateKeypressActions(e) {
-    const displayPoint = (point) => {
-      if (point === "." && result_p.innerText.includes("."))
-        return displayCharSelected(point);
-    };
-
-    const displayNumber = (number) => {
-      if (+number) return displayCharSelected(number);
-    };
-
-    const initiateOperatorActions = (operator) => {
-      const displayAddOperator = () => {
-        if (operator === "+") return displayCharSelected(operator);
-      };
-
-      const displaySubtractOperator = () => {
-        if (operator === "-") return displayCharSelected(operator);
-      };
-
-      const displayMultiplyOperator = () => {
-        const MULTIPLICATION_KEYS = ["*", "x", "X"];
-        for (let i = 0; i < MULTIPLICATION_KEYS.length; i++) {
-          if (operator === MULTIPLICATION_KEYS[i])
-            return (result_p.innerText += "x");
-        }
-      };
-
-      const displayDivideOperator = () => {
-        if (operator === "/") return (result_p.innerText += "÷");
-      };
-
-      displayAddOperator();
-      displaySubtractOperator();
-      displayMultiplyOperator();
-      displayDivideOperator();
-    };
-
-    displayPoint(e.key);
-    displayNumber(e.key);
-    initiateOperatorActions(e.key);
-    alterToClearEntityButton();
-  }
-};
-
-initiateButtonActions();
-initiateKeyboardActions();
+}
