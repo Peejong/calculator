@@ -1,272 +1,195 @@
 const output_small_p = document.querySelector(".output-small");
 const output_big_p = document.querySelector(".output-big");
 const clear_button = document.querySelector(".btn-clear");
-const MATH_OPERATORS = ["+", "-", "x", "÷"];
-let isResultError = false;
-let isResultHasAnswer = false;
+let currentOperatorUsed = "";
+let isOutputDisplaysError = false;
+let isOutputDisplaysAnswer = false;
 
-const setClearButtonToDefault = () => {
-  clear_button.innerText = "AC";
-};
+const setClearButtonToDefault = () => (clear_button.textContent = "AC");
 
 const alterClearButtonLabel = () => {
-  const alterToACLabel = () => {
-    if (output_big_p.innerText === "") clear_button.innerText = "AC";
+  const alterToAC = () => {
+    if (output_big_p.textContent === "") clear_button.textContent = "AC";
   };
 
-  const alterToCELabel = () => {
-    if (output_big_p.innerText) clear_button.innerText = "CE";
+  const alterToCE = () => {
+    if (output_big_p.textContent) clear_button.textContent = "CE";
   };
 
-  alterToACLabel();
-  alterToCELabel();
+  alterToAC();
+  alterToCE();
 };
 
-const clearAllCharacters = () => {
-  output_small_p.innerText = "";
-  output_big_p.innerText = "";
+const clearAllEntities = () => {
+  output_small_p.textContent = "";
+  output_big_p.textContent = "";
 };
 
-const clearLastCharacter = () => {
-  let clearLastCharacterCleared = output_big_p.innerText.slice(0, -1);
-  output_big_p.innerText = clearLastCharacterCleared;
+const clearLastEntity = () => {
+  let lastEntityCleared = output_big_p.textContent.slice(0, -1);
+
+  output_big_p.textContent = lastEntityCleared;
 };
 
-const clearOutputCharacters = () => {
-  if (clear_button.innerText === "CE") clearLastCharacter();
-  if (clear_button.innerText === "AC") clearAllCharacters();
+const clearOutputEntities = () => {
+  if (clear_button.textContent === "AC") clearAllEntities();
+  if (clear_button.textContent === "CE") clearLastEntity();
   alterClearButtonLabel();
 };
 
-const displayCharacter = (char) => {
-  const resetErrorOutput = () => {
-    if (!isResultError) return;
-    output_small_p.innerText = "";
-    output_big_p.innerText = "";
-    isResultError = false;
+const displayInputEntities = (char) => {
+  const displayPreviousAnswer = () => {
+    if (!isOutputDisplaysAnswer || +char) return;
+    isOutputDisplaysAnswer = false;
+    output_small_p.textContent = `Ans: ${output_big_p.textContent}`;
   };
 
-  const resetAnswerOutput = (char) => {
-    if (!isResultHasAnswer) return;
-    if (isNaN(char)) {
-      output_small_p.innerText = `Ans: ${output_big_p.innerText}`;
-      isResultHasAnswer = false;
-    }
-
-    if (!isNaN(char)) {
-      clearAllCharacters();
-      isResultHasAnswer = false;
-    }
+  const resetDisplayOutput = () => {
+    if (!isOutputDisplaysError && !isOutputDisplaysAnswer) return;
+    isOutputDisplaysAnswer = false;
+    isOutputDisplaysError = false;
+    clearAllEntities();
   };
 
-  resetAnswerOutput(char);
-  resetErrorOutput();
-  output_big_p.innerText += char;
+  const combineInputEntities = () => (output_big_p.textContent += char);
+
+  displayPreviousAnswer();
+  resetDisplayOutput();
+  combineInputEntities();
   alterClearButtonLabel();
 };
 
-const getOperator = (expression) => {
-  return expression
-    .split("")
-    .filter((operator) => MATH_OPERATORS.includes(operator))
-    .join("");
+const getCurrentOperatorUsed = (operator) => {
+  if (currentOperatorUsed) evaluateInputExpression();
+  currentOperatorUsed = operator;
 };
 
-const getNumbers = (expression, operator) => {
-  const convertStringToNumber = (string) => {
-    if (string.includes(".")) return parseFloat(string);
-    return parseInt(string);
+const evaluateInputExpression = () => {
+  const getNumbers = (expression, operator) => {
+    const convertStringToNumber = (string) => {
+      if (string.includes(".")) return parseFloat(string);
+      return parseInt(string);
+    };
+
+    return expression
+      .split(operator)
+      .map((numbers) => convertStringToNumber(numbers));
   };
 
-  return expression
-    .split(operator)
-    .map((numbers) => convertStringToNumber(numbers));
-};
+  const calculateExpression = (operator, numbers) => {
+    const calculateWithMissingNumber = () => "Syntax Error";
 
-const calculateEquation = (operator, numbers) => {
-  const calculateWithMissingNumber = () => {
-    return "Syntax Error";
-  };
-  const calculateWithMissingOperator = () => {
-    return numbers.join("");
-  };
+    const calculateWithoutOperator = () => numbers.join("");
 
-  const addNumbers = () => {
-    return numbers.reduce((result, number) => result + number);
-  };
+    const calculateAddition = () =>
+      numbers.reduce((numberOne, numberTwo) => numberOne + numberTwo);
 
-  const subtractNumbers = () => {
-    return numbers.reduce((result, number) => result - number);
-  };
+    const calculateSubtraction = () =>
+      numbers.reduce((numberOne, numberTwo) => numberOne - numberTwo);
 
-  const multiplyNumbers = () => {
-    return numbers.reduce((result, number) => result * number);
-  };
+    const calculateMultiplication = () =>
+      numbers.reduce((numberOne, numberTwo) => numberOne * numberTwo);
 
-  const divideNumbers = () => {
-    return numbers.reduce((result, number) => {
-      if (result === 0 && number === 0) return "Syntax Error";
-      if (result === 0) return 0;
-      if (number === 0) return "Infinity";
+    const calculateDivision = () =>
+      numbers.reduce((numberOne, numberTwo) => {
+        if (numberOne === 0 && numberTwo === 0) return "Syntax Error";
+        if (numberOne === 0) return 0;
+        if (numberTwo === 0) return "Infinity";
 
-      return result / number;
-    });
+        return numberOne / numberTwo;
+      });
+
+    if (numbers.includes(NaN)) return calculateWithMissingNumber();
+    if (operator === "") return calculateWithoutOperator();
+    if (operator === "+") return calculateAddition();
+    if (operator === "-") return calculateSubtraction();
+    if (operator === "x") return calculateMultiplication();
+    if (operator === "÷") return calculateDivision();
   };
 
-  if (numbers.includes(NaN)) return calculateWithMissingNumber();
-  if (operator === "") return calculateWithMissingOperator();
-  if (operator === "+") return addNumbers();
-  if (operator === "-") return subtractNumbers();
-  if (operator === "x") return multiplyNumbers();
-  if (operator === "÷") return divideNumbers();
-};
-
-const displayResult = ({ expression, operator, result }) => {
-  const checksResult = () => {
-    if (result === "Syntax Error") isResultError = true;
-    if (result !== "Syntax Error") isResultHasAnswer = true;
+  const checkResult = (result) => {
+    if (result === "Syntax Error") isOutputDisplaysError = true;
+    if (result !== "Syntax Error") isOutputDisplaysAnswer = true;
   };
 
-  const displayExrpression = () => {
-    if (result === "Syntax Error") return;
+  const displayExpression = ({ expression, operator, result }) => {
+    if (isOutputDisplaysError) return;
 
     const displayWithOperator = () => {
       if (operator)
-        output_small_p.innerText = expression
+        output_small_p.textContent = expression
           .split(operator)
           .join(` ${operator} `);
     };
 
     const displayWithoutOperator = () => {
-      if (operator === "") output_small_p.innerText = result;
+      if (!operator) output_small_p.textContent = result;
     };
 
     displayWithOperator();
     displayWithoutOperator();
   };
 
-  const displayAnswer = () => {
-    output_big_p.innerText = result;
-  };
+  const displayResult = (result) => (output_big_p.textContent = result);
+  const resetOperatorUsed = () => (currentOperatorUsed = "");
 
-  checksResult();
-  displayExrpression();
-  displayAnswer();
+  setClearButtonToDefault();
+  const expression = output_big_p.textContent;
+  const operator = currentOperatorUsed;
+  const numbers = getNumbers(expression, operator);
+  const result = calculateExpression(operator, numbers);
+  checkResult(result);
+  displayExpression({
+    expression,
+    operator,
+    result,
+  });
+  displayResult(result);
+  resetOperatorUsed();
 };
-
-window.addEventListener("keydown", initiateKeydownActions);
-
-function initiateKeydownActions(e) {
-  const initiateBackspaceAction = () => {
-    if (e.keyCode === 8) clearOutputCharacters();
-  };
-
-  const initiateDeleteAction = () => {
-    if (e.keyCode === 46) clearGlobal();
-  };
-
-  const initiateEnterAction = () => {
-    if (e.keyCode === 13) {
-      setClearButtonToDefault();
-      const expression = output_big_p.innerText;
-      const operator = getOperator(expression);
-      const numbers = getNumbers(expression, operator);
-      const result = calculateEquation(operator, numbers);
-      displayResult({
-        expression,
-        operator,
-        result,
-      });
-    }
-  };
-
-  const initiateEqualAction = () => {
-    if (e.keyCode === 187 && !e.shiftKey) {
-      setClearButtonToDefault();
-      const expression = output_big_p.innerText;
-      const operator = getOperator(expression);
-      const numbers = getNumbers(expression, operator);
-      const result = calculateEquation(operator, numbers);
-      displayResult({
-        expression,
-        operator,
-        result,
-      });
-    }
-  };
-
-  const initiatePointAction = () => {
-    if (e.key === ".") displayCharacter(e.key);
-  };
-
-  const initiateNumberAction = () => {
-    if (!isNaN(e.key)) displayCharacter(e.key);
-  };
-
-  const initiatePlusAction = () => {
-    if (e.key === "+") displayCharacter(e.key);
-  };
-
-  const initiateMinusAction = () => {
-    if (e.key === "-") displayCharacter(e.key);
-  };
-
-  const initiateTimesAction = () => {
-    if (e.key === "X" || e.key === "x" || e.key === "*") displayCharacter("x");
-  };
-
-  const initiateSlashAction = () => {
-    if (e.key === "/") displayCharacter("÷");
-  };
-
-  initiatePointAction();
-  initiateNumberAction();
-  initiatePlusAction();
-  initiateMinusAction();
-  initiateTimesAction();
-  initiateSlashAction();
-  initiateBackspaceAction();
-  initiateDeleteAction();
-  initiateEnterAction();
-  initiateEqualAction();
-}
 
 const point_button = document.querySelector(".btn-point");
 const number_buttons = document.querySelectorAll(".btn-num");
 const operator_buttons = document.querySelectorAll(".btn-operators");
 const equal_button = document.querySelector(".btn-equal");
 
-clear_button.addEventListener("click", clearOutputCharacters);
-point_button.addEventListener("click", initiatePointButtonClicked);
-number_buttons.forEach((number) => {
-  number.addEventListener("click", initiateNumberButtonClicked);
-});
-operator_buttons.forEach((operator) =>
-  operator.addEventListener("click", initiateOperatorButtonClicked)
+clear_button.addEventListener("click", clearOutputEntities);
+point_button.addEventListener("click", (e) =>
+  displayInputEntities(point_button.textContent)
 );
-equal_button.addEventListener("click", initiateEqualButtonAction);
-
-function initiatePointButtonClicked() {
-  displayCharacter(point_button.innerText);
-}
-
-function initiateNumberButtonClicked() {
-  displayCharacter(this.innerText);
-}
-
-function initiateOperatorButtonClicked() {
-  displayCharacter(this.innerText);
-}
-
-function initiateEqualButtonAction() {
-  setClearButtonToDefault();
-  const expression = output_big_p.innerText;
-  const operator = getOperator(expression);
-  const numbers = getNumbers(expression, operator);
-  const result = calculateEquation(operator, numbers);
-  displayResult({
-    expression,
-    operator,
-    result,
+number_buttons.forEach((number) => {
+  number.addEventListener("click", (e) =>
+    displayInputEntities(number.textContent)
+  );
+});
+operator_buttons.forEach((operator) => {
+  operator.addEventListener("click", (e) => {
+    getCurrentOperatorUsed(operator.textContent);
+    displayInputEntities(operator.textContent);
   });
+});
+equal_button.addEventListener("click", evaluateInputExpression);
+
+window.addEventListener("keydown", initiateKeydownActions);
+
+function initiateKeydownActions(e) {
+  e.preventDefault();
+  if (e.key === "Backspace") clearOutputEntities();
+  if (e.key === "Delete") clearAllEntities();
+  if (!isNaN(e.key) || e.key === ".") displayInputEntities(e.key);
+  if (e.key === "+" || e.key === "-") {
+    getCurrentOperatorUsed(e.key);
+    displayInputEntities(e.key);
+  }
+  if (e.key === "X" || e.key === "x" || e.key === "*") {
+    getCurrentOperatorUsed("x");
+    displayInputEntities("x");
+  }
+  if (e.key === "/") {
+    getCurrentOperatorUsed("÷");
+    displayInputEntities("÷");
+  }
+  if (e.key === "=" || e.key === "Enter") {
+    evaluateInputExpression();
+  }
 }
